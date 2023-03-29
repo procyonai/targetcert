@@ -1,0 +1,23 @@
+// rpc messages
+
+syntax = "proto3";
+package rpc;
+option go_package = ".;rpc";
+
+message TargetCertReq {
+    string    APIKey    = 1;  // APIKey
+    string    EncCSR     = 2;  // Encrypted CSR
+    string    ClusterID  = 3;  // ClusterId
+}
+
+message TargetCertRes {
+    string    Cert          = 1;  // certificate (x509 pem)
+    string    CertChain     = 2;  // certchain (pem)
+    string    TenantRoot    = 3;  // tenant root ca (pem)
+    string    Token         = 4;  // token file
+}
+
+
+service NotaryOpenService {
+    rpc GenTargetCert(TargetCertReq) returns (TargetCertRes);     // generate cert for target
+}
