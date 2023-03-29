@@ -9,10 +9,22 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"flag"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 
 	rpc "github.com/procyonai/targetcert/golang/generated"
 	pcrypto "github.com/procyonai/targetcert/golang/pkg"
 	"github.com/sirupsen/logrus"
+	"k8s.io/client-go/util/keyutil"
+)
+
+// proxy cert related constants
+var (
+	ProxyTokenFile = "proxy-token.data"
+	ProxyCertFile  = "proxy-crt.pem"
+	ProxyCaFile    = "proxy-ca.pem"
+	ProxyKeyFile   = "proxy-key.pem"
 )
 
 func main() {
@@ -22,6 +34,7 @@ func main() {
 	apisecret := flag.String("apisecret", "", "Tenant API Secret")
 	clusterid := flag.String("clusterid", "", "ClusterID for Appliance")
 	cntrlurl := flag.String("cntrlurl", "", "cntrlURL for getting cert")
+	certpath := flag.String("certpath", "", "optional - write test cert/keys to this path")
 	flag.Parse()
 
 	if len(*apikey) == 0 {
@@ -50,6 +63,13 @@ func main() {
 		logrus.Infof("failed to generte Private Key")
 		return
 	}
+
+	pemkey, err := keyutil.MarshalPrivateKeyToPEM(privateKey)
+	if err != nil {
+		logrus.Infof("failed to marshal Private Key")
+		return
+	}
+	ProxyKey := string(pemkey)
 
 	//CSR will be generated inside applaince as well
 	template := x509.CertificateRequest{
@@ -106,7 +126,41 @@ func main() {
 		Write generated content to following files:
 		original privatekey to CERT_FOLDER/proxy-key.pem
 		targetCertResp.Cert to CERT_FOLDER/proxy-crt.pem
-		argetCertResp.CertChain to CERT_FOLDER/proxy-ca.pem
+		targetCertResp.CertChain to CERT_FOLDER/proxy-ca.pem
 		targetCertResp.Token to CERT_FOLDER/proxy-token.data
 	*/
+
+	// proxy cert related constants
+
+	if len(*certpath) != 0 {
+		_, err = os.Stat(*certpath)
+		ProxyTokenPath := filepath.Join(*certpath, ProxyTokenFile)
+		ProxyCertPath := filepath.Join(*certpath, ProxyCertFile)
+		ProxyKeyPath := filepath.Join(*certpath, ProxyKeyFile)
+		ProxyCaPath := filepath.Join(*certpath, ProxyCaFile)
+
+		if err == nil {
+			logrus.Infof("%s exists - writing cert/key/cacert", *certpath)
+			err = ioutil.WriteFile(ProxyCertPath, []byte(targetCertResp.Cert), 0755)
+			if err != nil {
+				logrus.Infof("Cert write to %s failed", ProxyCertPath)
+				return
+			}
+			err = ioutil.WriteFile(ProxyKeyPath, []byte(ProxyKey), 0755)
+			if err != nil {
+				logrus.Infof("Key write to %s failed", ProxyKeyPath)
+				return
+			}
+			err = ioutil.WriteFile(ProxyCaPath, []byte(targetCertResp.CertChain), 0755)
+			if err != nil {
+				logrus.Infof("CA Cert write to %s failed", ProxyCaPath)
+				return
+			}
+			err = ioutil.WriteFile(ProxyTokenPath, []byte(targetCertResp.Token), 0755)
+			if err != nil {
+				logrus.Infof("ProxyToken write to %s failed", ProxyTokenPath)
+				return
+			}
+		}
+	}
 }

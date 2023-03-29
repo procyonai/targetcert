@@ -7,6 +7,7 @@ require (
 	github.com/golang/protobuf v1.5.3
 	github.com/sirupsen/logrus v1.9.0
 	google.golang.org/grpc v1.54.0
+	k8s.io/client-go v0.26.3
 )
 
 require (
