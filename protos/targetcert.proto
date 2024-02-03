@@ -17,7 +17,18 @@ message TargetCertRes {
     string    Token         = 4;  // token file
 }
 
+message AppCreateReq {
+    string    APIKey         = 1;  // APIKey
+    string    EncReqData     = 2;  // Encrypted data
+}
+
+message AppCreateRes {
+    string    AppName    = 1;  // app name
+    string    AppURL     = 2;  // app url
+}
+
 
 service NotaryOpenService {
     rpc GenTargetCert(TargetCertReq) returns (TargetCertRes);     // generate cert for target
+    rpc CreateApplication(AppCreateReq) returns (AppCreateRes);     // create new application
 }

@@ -2,6 +2,6 @@
 .DEFAULT_GOAL := default
 
 build:
-	go install ./cmd/certutil
+	go install ./cmd/certutil ./cmd/apputil
 
 default: build

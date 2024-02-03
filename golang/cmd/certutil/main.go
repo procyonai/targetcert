@@ -33,7 +33,7 @@ func main() {
 	apikey := flag.String("apikey", "", "Tenant API Key")
 	apisecret := flag.String("apisecret", "", "Tenant API Secret")
 	clusterid := flag.String("clusterid", "", "ClusterID for Appliance")
-	cntrlurl := flag.String("cntrlurl", "", "cntrlURL for getting cert")
+	cntrlurl := flag.String("cntrlurl", "app-nginx.proxyon.cloud:443", "cntrlURL for getting cert")
 	certpath := flag.String("certpath", "", "optional - write test cert/keys to this path")
 	flag.Parse()
 
